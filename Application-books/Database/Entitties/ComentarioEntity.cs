@@ -23,6 +23,15 @@ namespace Application_books.Database.Entitties
 
         [Column("fecha")]
         public DateTime Fecha { get; set; } = DateTime.Now;
+
+        [Column("id_comentario_padre")]
+        public Guid? IdComentarioPadre { get; set; }  // Nullable para comentarios principales
+
+        [ForeignKey(nameof(IdComentarioPadre))]
+        public virtual ComentarioEntity ComentarioPadre { get; set; }  // Referencia al comentario padre
+
+        public virtual ICollection<ComentarioEntity> Respuestas { get; set; } = new List<ComentarioEntity>();
+
         public virtual UserEntity CreatedByUser { get; set; }
         public virtual UserEntity UpdatedByUser { get; set; }
     }

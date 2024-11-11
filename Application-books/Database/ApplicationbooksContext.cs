@@ -22,6 +22,13 @@ namespace Application_books.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<ComentarioEntity>()
+            .HasOne(c => c.ComentarioPadre)
+            .WithMany(c => c.Respuestas)
+            .HasForeignKey(c => c.IdComentarioPadre)
+            .OnDelete(DeleteBehavior.Restrict); // Evitamos eliminación en cascada accidental de comentarios
+
             modelBuilder.UseCollation("SQL_Latin1_General_CP1_CI_AS");
             modelBuilder.HasDefaultSchema("security");
 

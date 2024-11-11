@@ -77,10 +77,10 @@ namespace Application_books.Services
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = $"El registro registro"
+                    Message = $"El registro no se encontro"
                 };
             }
-            _mapper.Map<AutorEditDto, AutorEntity>(dto, autorEntity);
+            _mapper.Map(dto, autorEntity);
             _context.Autores.Update(autorEntity);
             await _context.SaveChangesAsync();
 

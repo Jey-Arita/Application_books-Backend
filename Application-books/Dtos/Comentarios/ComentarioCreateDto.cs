@@ -13,5 +13,6 @@ namespace Application_books.Dtos.Comentarios
         [Display(Name = "Comentario")]
         [Required(ErrorMessage = "El valor de estrellas es requerido.")]
         public string Comentario { get; set; }
+        public Guid? IdComentarioPadre { get; set; }
     }
 }

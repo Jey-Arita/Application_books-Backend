@@ -20,6 +20,7 @@ namespace Application_books.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<ResponseDto<PaginationDto<List<LibroDto>>>>> PaginationList(string searchTerm, int page = 1) 
         {
             var response = await _librosServices.GetLibroListAsync(searchTerm, page);
@@ -33,6 +34,7 @@ namespace Application_books.Controllers
         }
 
         [HttpGet("destacados")]
+        [AllowAnonymous]
         public async Task<ActionResult<ResponseDto<List<LibroDto>>>> GetAll() 
         {
                 var response = await _librosServices.GetLibroListDestacadosAsync();
@@ -40,6 +42,7 @@ namespace Application_books.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = $"{RolesConstant.ADMIN}, {RolesConstant.SUSCRIPTOR}")]
         public async Task<ActionResult<ResponseDto<LibroDto>>> Get(Guid id)
         {
             var response = await _librosServices.GetLibroByAsync(id);  

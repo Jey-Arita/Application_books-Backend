@@ -30,55 +30,82 @@ namespace Application_books.Services
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Lista de calificacion obtenida correctamente.",
+                Message = "Lista de comentarios obtenida correctamente.",
                 Data = ComentariosDtos,
             };
         }
         public async Task<ResponseDto<List<ComentarioDto>>> GetComentarioByAsync(Guid id)
         {
-            var comentarioEntity = await _context.Comentarios
-            .Where(c => c.IdLibro == id)
-            .Include(c => c.Usuario)
-            .ToListAsync();
+            // Cargar los comentarios principales junto con las respuestas y el usuario de cada respuesta
+            var comentarioEntities = await _context.Comentarios
+                .Where(c => c.IdLibro == id) // Filtrar por el ID del libro
+                .Include(c => c.Usuario) // Incluir el usuario que hizo el comentario principal
+                .Include(c => c.Respuestas) // Incluir las respuestas de cada comentario
+                .ThenInclude(r => r.Usuario) // Incluir el usuario de cada respuesta
+                .ToListAsync();
 
-
-            if (comentarioEntity == null)
+            // Verificar si no se encontraron comentarios
+            if (!comentarioEntities.Any())
             {
                 return new ResponseDto<List<ComentarioDto>>
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = "No se encontró registro."
+                    Message = "No se encontraron registros."
                 };
             }
-            var comentarioDto = _mapper.Map < List<ComentarioDto>>(comentarioEntity);
+
+            // Mapear los comentarios y sus respuestas a DTOs
+            var comentarioDtos = _mapper.Map<List<ComentarioDto>>(comentarioEntities);
+
             return new ResponseDto<List<ComentarioDto>>
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Registro obtenido correctamente.",
-                Data = comentarioDto,
+                Message = "Comentarios obtenidos correctamente.",
+                Data = comentarioDtos,
             };
         }
+
         public async Task<ResponseDto<ComentarioDto>> CreateAsync(ComentarioCreateDto dto)
         {
+            // Mapea el DTO a la entidad de comentario
             var comentarioEntity = _mapper.Map<ComentarioEntity>(dto);
 
-            //var userIdString = _authService.GetUserId();
+            // Si el DTO incluye un IdComentarioPadre, significa que este comentario es una respuesta
+            if (dto.IdComentarioPadre.HasValue)
+            {
+                var comentarioPadre = await _context.Comentarios.FindAsync(dto.IdComentarioPadre.Value);
+                if (comentarioPadre == null)
+                {
+                    return new ResponseDto<ComentarioDto>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = "El comentario al que intentas responder no existe."
+                    };
+                }
 
+                // Asigna el IdComentarioPadre al nuevo comentario
+                comentarioEntity.IdComentarioPadre = dto.IdComentarioPadre;
+            }
+
+            // Agrega el comentario (o respuesta) a la base de datos
             _context.Comentarios.Add(comentarioEntity);
             await _context.SaveChangesAsync();
 
-            var calificacionDto = _mapper.Map<ComentarioDto>(comentarioEntity);
+            // Mapea la entidad a DTO para la respuesta
+            var comentarioDto = _mapper.Map<ComentarioDto>(comentarioEntity);
 
             return new ResponseDto<ComentarioDto>
             {
                 StatusCode = 201,
                 Status = true,
-                Message = "Registro creado coreectamente.",
-                Data = calificacionDto,
+                Message = "Comentario creado correctamente.",
+                Data = comentarioDto,
             };
         }
+
         public async Task<ResponseDto<ComentarioDto>> EditAsync(ComentarioEditDto dto, Guid id)
         {
             var comentarioEntity = await _context.Comentarios.FirstOrDefaultAsync(e => e.Id == id);

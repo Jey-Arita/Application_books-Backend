@@ -5,7 +5,7 @@ namespace Application_books.Dtos.Autor
     public class AutorCreateDto
     {
         [Display(Name = "Nombre")]
-        [Required(ErrorMessage = "El nombre del libro es requerido.")]
+        [Required(ErrorMessage = "El nombre del Autor es requerido.")]
         public string NombreAutor { get; set; }
         [Display(Name = "Descripcion")]
         [MinLength(10, ErrorMessage = "La {0} debe tener al menos {1} caracteres.")]
