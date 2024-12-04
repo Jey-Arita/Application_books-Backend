@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Application_books.Migrations
 {
     [DbContext(typeof(ApplicationbooksContext))]
-    [Migration("20241106054609_add-Roles")]
-    partial class addRoles
+    [Migration("20241204064339_AddTablaGeneros")]
+    partial class AddTablaGeneros
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -239,6 +239,10 @@ namespace Application_books.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("fecha");
 
+                    b.Property<Guid?>("IdComentarioPadre")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id_comentario_padre");
+
                     b.Property<Guid>("IdLibro")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id_libro");
@@ -260,6 +264,8 @@ namespace Application_books.Migrations
 
                     b.HasIndex("CreatedBy");
 
+                    b.HasIndex("IdComentarioPadre");
+
                     b.HasIndex("IdLibro");
 
                     b.HasIndex("IdUsuario");
@@ -267,6 +273,42 @@ namespace Application_books.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.ToTable("comentario", "dbo");
+                });
+
+            modelBuilder.Entity("Application_books.Database.Entitties.GeneroEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("nombre");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("genero", "dbo");
                 });
 
             modelBuilder.Entity("Application_books.Database.Entitties.LibroEntity", b =>
@@ -296,15 +338,13 @@ namespace Application_books.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("created_time");
 
-                    b.Property<string>("Genero")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("genero");
-
                     b.Property<Guid>("IdAutor")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id_autor");
+
+                    b.Property<Guid>("IdGenero")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id_genero");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
@@ -338,6 +378,8 @@ namespace Application_books.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("IdAutor");
+
+                    b.HasIndex("IdGenero");
 
                     b.HasIndex("UpdatedBy");
 
@@ -635,6 +677,11 @@ namespace Application_books.Migrations
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Application_books.Database.Entitties.ComentarioEntity", "ComentarioPadre")
+                        .WithMany("Respuestas")
+                        .HasForeignKey("IdComentarioPadre")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Application_books.Database.Entitties.LibroEntity", "Libro")
                         .WithMany()
                         .HasForeignKey("IdLibro")
@@ -650,6 +697,8 @@ namespace Application_books.Migrations
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ComentarioPadre");
 
                     b.Navigation("CreatedByUser");
 
@@ -673,6 +722,12 @@ namespace Application_books.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Application_books.Database.Entitties.GeneroEntity", "Genero")
+                        .WithMany()
+                        .HasForeignKey("IdGenero")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Application_books.Database.Entities.UserEntity", "UpdatedByUser")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
@@ -681,6 +736,8 @@ namespace Application_books.Migrations
                     b.Navigation("Autor");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Genero");
 
                     b.Navigation("UpdatedByUser");
                 });
@@ -800,6 +857,11 @@ namespace Application_books.Migrations
             modelBuilder.Entity("Application_books.Database.Entitties.AutorEntity", b =>
                 {
                     b.Navigation("Libros");
+                });
+
+            modelBuilder.Entity("Application_books.Database.Entitties.ComentarioEntity", b =>
+                {
+                    b.Navigation("Respuestas");
                 });
 
             modelBuilder.Entity("Application_books.Database.Entitties.LibroEntity", b =>

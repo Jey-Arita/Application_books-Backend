@@ -14,9 +14,9 @@ namespace Application_books.Dtos.Libros
         [MinLength(10, ErrorMessage = "La {0} debe tener al menos {1} caracteres.")]
         public string Descripcion { get; set; }
 
-        [Display(Name = "Genero")]
+        [Display(Name = "IdGenero")]
         [MinLength(4, ErrorMessage = "El {0} debe tener al menos {1} caracteres.")]
-        public string Genero { get; set; }
+        public string IdGenero { get; set; }
 
         [Display(Name = "URL de la img")]
         [Url(ErrorMessage = "La URL de la img no es valida.")]

@@ -22,6 +22,7 @@ namespace Application_books.Database
             {
                 await LoadRolesAndUsersAsync(userManager, roleManager, loggerFactory);
                 await LoadAutorAsync(loggerFactory, context);
+                await LoadGenerosAsync(loggerFactory, context);
                 await LoadLibrosAsync(loggerFactory, context);                             
             }
             catch (Exception e)
@@ -90,6 +91,25 @@ namespace Application_books.Database
 
         }
 
+        public static async Task LoadGenerosAsync(ILoggerFactory loggerFactory, ApplicationbooksContext _context)
+        {
+            try
+            {
+                var jsonfilePath = "SeedData/generos.json";
+                var jsonnContent = await File.ReadAllTextAsync(jsonfilePath);
+                var generos = JsonConvert.DeserializeObject<List<GeneroEntity>>(jsonnContent);
+                if (!await _context.Generos.AnyAsync())
+                {
+                    _context.Generos.AddRange(generos);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ApplicationbooksContext>();
+                logger.LogError(e, "Error al ejecutar el Seed de libros.");
+            }
+        }
         public static async Task LoadLibrosAsync(ILoggerFactory loggerFactory, ApplicationbooksContext _context)
         {
             try

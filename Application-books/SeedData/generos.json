@@ -1,0 +1,94 @@
+[
+  {
+    "id": "09a8c626-4678-4068-9064-2e0ad448f44f",
+    "nombre": "Acción"
+  },
+  {
+    "id": "12a42c71-3d25-4142-b57a-4e5f3540ca89",
+    "nombre": "Aventura"
+  },
+  {
+    "id": "b2379813-de3f-4756-8dbc-3c2891d956ce",
+    "nombre": "Ciencia Ficción"
+  },
+  {
+    "id": "35034d27-57bb-43fb-ab91-438e05bab481",
+    "nombre": "Comedia"
+  },
+  {
+    "id": "882fb47e-77a3-44d7-bf56-77ae1ed42dbc",
+    "nombre": "Drama"
+  },
+  {
+    "id": "062b48af-fb33-404c-af97-c10ca005a829",
+    "nombre": "Fantasía"
+  },
+  {
+    "id": "3444294a-03e9-4ec9-afaf-8e1755cfd071",
+    "nombre": "Histórico"
+  },
+  {
+    "id": "e27f4c6b-534d-4ba1-95f7-0ed39291efa4",
+    "nombre": "Horror"
+  },
+  {
+    "id": "76d267a5-9a2f-4c70-ba70-fb77c723c663",
+    "nombre": "Misterio"
+  },
+  {
+    "id": "4587149c-ce37-4acf-b0ff-66f53da3f9da",
+    "nombre": "Romance"
+  },
+  {
+    "id": "0b32a06e-1ba1-42ac-b594-e1cf35f5b3d8",
+    "nombre": "Suspenso"
+  },
+  {
+    "id": "bfb03c02-3bf6-4060-9ffa-d79476fd6b81",
+    "nombre": "Terror"
+  },
+  {
+    "id": "7367e9a3-0e4b-4266-9ca8-627a7c892755",
+    "nombre": "Biografía"
+  },
+  {
+    "id": "a52c03dc-e20d-4dc6-aada-16095f7e85d4",
+    "nombre": "Autobiografía"
+  },
+  {
+    "id": "fd1f6442-a96a-43e4-9745-2c950a54e256",
+    "nombre": "Poesía"
+  },
+  {
+    "id": "955603f6-8028-43cf-8090-e442dbf141a7",
+    "nombre": "Ensayo"
+  },
+  {
+    "id": "38a13d05-8977-49f5-aec2-ab0e76fbf675",
+    "nombre": "Infantil"
+  },
+  {
+    "id": "80c57ea0-a1f8-4911-9dac-534262092123",
+    "nombre": "Juvenil"
+  },
+  {
+    "id": "e2eacd7f-9aa6-426f-b426-00b5e533b16e",
+    "nombre": "Distopía"
+  },
+  {
+    "id": "be4312d5-1b48-4dd8-9bb9-b18e23a1d50c",
+    "nombre": "Utopía"
+  },
+  {
+    "id": "d7c7c2f0-bfa2-44fe-801b-0154bd1f5945",
+    "nombre": "Aventura Espacial"
+  },
+  {
+    "id": "b2c352a4-8238-47a4-bf1d-a3f06b6bd2c9",
+    "nombre": "Steampunk"
+  },
+  {
+    "id": "4548d643-08dd-405b-9c78-cb03eb38931c",
+    "nombre": "Ciberpunk"
+  }
+]

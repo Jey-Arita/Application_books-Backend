@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Application_books.Migrations
 {
     /// <inheritdoc />
-    public partial class addRoles : Migration
+    public partial class AddTablaGeneros : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,6 +16,23 @@ namespace Application_books.Migrations
 
             migrationBuilder.EnsureSchema(
                 name: "security");
+
+            migrationBuilder.CreateTable(
+                name: "genero",
+                schema: "dbo",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updated_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    updated_date = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_genero", x => x.id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "roles",
@@ -262,7 +279,7 @@ namespace Application_books.Migrations
                     id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     titulo = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     descripcion = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    genero = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    id_genero = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     created_time = table.Column<DateTime>(type: "datetime2", maxLength: 50, nullable: false),
                     img_libro = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     pdf_libro = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
@@ -280,6 +297,13 @@ namespace Application_books.Migrations
                         column: x => x.id_autor,
                         principalSchema: "dbo",
                         principalTable: "autor",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_libros_book_genero_id_genero",
+                        column: x => x.id_genero,
+                        principalSchema: "dbo",
+                        principalTable: "genero",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -355,6 +379,7 @@ namespace Application_books.Migrations
                     id_usuario = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     comentario = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     fecha = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    id_comentario_padre = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
                     created_date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
@@ -363,6 +388,13 @@ namespace Application_books.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_comentario", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_comentario_comentario_id_comentario_padre",
+                        column: x => x.id_comentario_padre,
+                        principalSchema: "dbo",
+                        principalTable: "comentario",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_comentario_libros_book_id_libro",
                         column: x => x.id_libro,
@@ -482,6 +514,12 @@ namespace Application_books.Migrations
                 column: "created_by");
 
             migrationBuilder.CreateIndex(
+                name: "IX_comentario_id_comentario_padre",
+                schema: "dbo",
+                table: "comentario",
+                column: "id_comentario_padre");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_comentario_id_libro",
                 schema: "dbo",
                 table: "comentario",
@@ -510,6 +548,12 @@ namespace Application_books.Migrations
                 schema: "dbo",
                 table: "libros_book",
                 column: "id_autor");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_libros_book_id_genero",
+                schema: "dbo",
+                table: "libros_book",
+                column: "id_genero");
 
             migrationBuilder.CreateIndex(
                 name: "IX_libros_book_updated_by",
@@ -655,6 +699,10 @@ namespace Application_books.Migrations
 
             migrationBuilder.DropTable(
                 name: "autor",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "genero",
                 schema: "dbo");
 
             migrationBuilder.DropTable(

@@ -17,10 +17,10 @@ namespace Application_books.Database.Entitties
         [Column("descripcion")]
         public string Descripcion { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        [Column("genero")]
-        public string Genero { get; set; }
+        [Column("id_genero")]
+        public Guid IdGenero { get; set; }
+        [ForeignKey(nameof(IdGenero))]
+        public virtual GeneroEntity Genero { get; set; }
 
         [StringLength(50)]
         [Column("created_time")]

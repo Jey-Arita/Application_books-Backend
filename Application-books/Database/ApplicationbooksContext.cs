@@ -91,13 +91,14 @@ namespace Application_books.Database
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        public DbSet<AutorEntity> Autores { get; set; }
+            public DbSet<AutorEntity> Autores { get; set; }
             public DbSet<CalificacionEntity> Calificaciones { get; set; }
             public DbSet<LibroEntity> Libros { get; set; }
             public DbSet<ListaFavoritoEntity> ListaFavoritos { get; set; }
             public DbSet<MembresiaEntity> Membresias { get; set; }
             public DbSet<UserEntity> Usuarios { get; set; }
             public DbSet<ComentarioEntity> Comentarios { get; set; }
+            public DbSet<GeneroEntity> Generos { get; set; }
 
     }
 }

@@ -272,6 +272,42 @@ namespace Application_books.Migrations
                     b.ToTable("comentario", "dbo");
                 });
 
+            modelBuilder.Entity("Application_books.Database.Entitties.GeneroEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("nombre");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("genero", "dbo");
+                });
+
             modelBuilder.Entity("Application_books.Database.Entitties.LibroEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -299,15 +335,13 @@ namespace Application_books.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("created_time");
 
-                    b.Property<string>("Genero")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("genero");
-
                     b.Property<Guid>("IdAutor")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id_autor");
+
+                    b.Property<Guid>("IdGenero")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id_genero");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
@@ -341,6 +375,8 @@ namespace Application_books.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("IdAutor");
+
+                    b.HasIndex("IdGenero");
 
                     b.HasIndex("UpdatedBy");
 
@@ -683,6 +719,12 @@ namespace Application_books.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Application_books.Database.Entitties.GeneroEntity", "Genero")
+                        .WithMany()
+                        .HasForeignKey("IdGenero")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Application_books.Database.Entities.UserEntity", "UpdatedByUser")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
@@ -691,6 +733,8 @@ namespace Application_books.Migrations
                     b.Navigation("Autor");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Genero");
 
                     b.Navigation("UpdatedByUser");
                 });
