@@ -1,0 +1,23 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}comentario/0de43d0b-d3c0-4a60-a590-08dcffbb060c
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "idLibro": "bfb4e115-0984-4c77-ba0a-e746a0cca855",
+    "idUsuario": "48195939-5675-4da9-b439-991851dec619",
+    "comentario": "Hola editando"
+  }
+}

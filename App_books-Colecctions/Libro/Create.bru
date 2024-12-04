@@ -1,0 +1,26 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{PATH}}libros
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "titulo": "siiiiiiii",
+    "descripcion": "Una historia de pincipito",
+    "genero": "Fantasia",
+    "urlimg": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+    "urlPdf": "https://www.imprentanacional.go.cr/editorialdigital/libros/literatura%20infantil/el_principito_edincr.pdf",
+    "idAutor": "EA9AD9A4-71F9-48B2-A026-1CB823FCD7AE"
+  }
+}

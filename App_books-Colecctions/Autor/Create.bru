@@ -1,0 +1,23 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{PATH}}autor
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "nombreAutor": "autor",
+    "bibliografia": "bibliografia",
+    "urlImg": "https://tools.ietf.org/html/rfc9110#section-15.5.1"
+  }
+}

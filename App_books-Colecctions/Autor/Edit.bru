@@ -1,0 +1,23 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}autor/ba235ea8-3914-420d-a9df-08dd00ffa141
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "nombreAutor": "Editame",
+    "bibliografia": "bibliografia",
+    "urlImg": "https://tools.ietf.org/html/rfc9110#section-15.5.1"
+  }
+}
