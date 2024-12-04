@@ -3,6 +3,7 @@ using Application_books.Database.Entitties;
 using Application_books.Dtos.Autor;
 using Application_books.Dtos.Calificacion;
 using Application_books.Dtos.Comentarios;
+using Application_books.Dtos.Generos;
 using Application_books.Dtos.Libros;
 using Application_books.Dtos.ListaFavoritos;
 using Application_books.Dtos.Membresia;
@@ -22,6 +23,13 @@ namespace Application_books.Helpers
             MapsForMembresia();
             MapsForListaFavorito();
             MapsForComentario();
+            MapsForGeneros();
+        }
+
+        private void MapsForGeneros()
+        {
+            CreateMap<GeneroEntity, GenerosDto>()
+            .ReverseMap();
         }
 
         private void MapsForLibros()

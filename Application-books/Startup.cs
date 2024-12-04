@@ -39,6 +39,7 @@ namespace Application_books
             services.AddTransient<IAuthService, AuthService>();
             services.AddTransient<IComentariosServices, ComentariosService>();
             services.AddTransient<IAuditService, AuditService>();
+            services.AddTransient<IGeneroService,GenerosServices>();
 
             // Add Identity
             services.AddIdentity<UserEntity, IdentityRole>(options =>
