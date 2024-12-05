@@ -3,6 +3,7 @@ using Application_books.Database.Entitties;
 using Application_books.Dtos.Autor;
 using Application_books.Dtos.Calificacion;
 using Application_books.Dtos.Comentarios;
+using Application_books.Dtos.Dashboard;
 using Application_books.Dtos.Generos;
 using Application_books.Dtos.Libros;
 using Application_books.Dtos.ListaFavoritos;
@@ -24,8 +25,13 @@ namespace Application_books.Helpers
             MapsForListaFavorito();
             MapsForComentario();
             MapsForGeneros();
+            MapsDashboard();
         }
 
+        private void MapsDashboard()
+        {
+            CreateMap<DashboardSummaryDto, DashboardSummaryDto>();
+        }
         private void MapsForGeneros()
         {
             CreateMap<GeneroEntity, GenerosDto>()
