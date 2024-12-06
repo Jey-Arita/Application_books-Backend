@@ -9,11 +9,12 @@ namespace Application_books.Database.Entitties
     {
         [Column("id_usuario")]
         public string IdUsuario { get; set; }
+
         [ForeignKey(nameof(IdUsuario))]
         public virtual UserEntity Usuario { get; set; }
 
-        [Column("activa_membresia")]
-        public bool ActivaMembresia { get; set; }
+        [Column("tipo_membresia")]
+        public string TipoMembresia { get; set; }
 
         [Column("fecha_inicio")]
         public DateTime FechaInicio { get; set; } = DateTime.Now;
@@ -21,8 +22,9 @@ namespace Application_books.Database.Entitties
         [Column("fecha_fin")]
         public DateTime? FechaFin { get; set; }
 
-        [Column("fecha_cancelacion")]
-        public DateTime? FechaCancelacion { get; set; }
+        [Column("dias_restantes")]
+        public int DiasRestantes { get; set; }
+
         public virtual UserEntity CreatedByUser { get; set; }
         public virtual UserEntity UpdatedByUser { get; set; }
     }
