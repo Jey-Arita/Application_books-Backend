@@ -14,12 +14,14 @@ namespace Application_books.Services
         private readonly ApplicationbooksContext _context;
         private readonly IMapper _mapper;
         private readonly IAuthService _authService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ComentariosService(ApplicationbooksContext context, IMapper mapper, IAuthService authService)
+        public ComentariosService(ApplicationbooksContext context, IMapper mapper, IAuthService authService, IHttpContextAccessor httpContextAccessor)
         {
             this._context = context;
             this._mapper = mapper;
             this._authService = authService;
+            this._httpContextAccessor = httpContextAccessor;
         }
         public async Task<ResponseDto<List<ComentarioDto>>> GetComentarioListAsync()
         {
@@ -69,8 +71,35 @@ namespace Application_books.Services
 
         public async Task<ResponseDto<ComentarioDto>> CreateAsync(ComentarioCreateDto dto)
         {
+            // Extraer el ID del usuario desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ResponseDto<ComentarioDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Usuario no autenticado."
+                };
+            }
+
+            // Buscar el usuario en la tabla User para obtener su nombre
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return new ResponseDto<ComentarioDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "El usuario no existe."
+                };
+            }
+
             // Mapea el DTO a la entidad de comentario
             var comentarioEntity = _mapper.Map<ComentarioEntity>(dto);
+            comentarioEntity.IdUsuario = userId; // Asocia el ID del usuario
+            comentarioEntity.NombreUsuario = user.FirstName + user.LastName; // Asocia el nombre del usuario
 
             // Si el DTO incluye un IdComentarioPadre, significa que este comentario es una respuesta
             if (dto.IdComentarioPadre.HasValue)
@@ -105,6 +134,7 @@ namespace Application_books.Services
                 Data = comentarioDto,
             };
         }
+
 
         public async Task<ResponseDto<ComentarioDto>> EditAsync(ComentarioEditDto dto, Guid id)
         {

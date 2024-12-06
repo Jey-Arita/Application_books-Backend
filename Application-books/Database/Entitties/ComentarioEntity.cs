@@ -24,6 +24,10 @@ namespace Application_books.Database.Entitties
         [Column("fecha")]
         public DateTime Fecha { get; set; } = DateTime.Now;
 
+        [StringLength(200)]
+        [Column("usuario")]
+        public string NombreUsuario { get; set; }
+
         [Column("id_comentario_padre")]
         public Guid? IdComentarioPadre { get; set; }  // Nullable para comentarios principales
 
