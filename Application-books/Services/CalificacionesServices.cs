@@ -13,12 +13,14 @@ namespace Application_books.Services
         private readonly ApplicationbooksContext _context;
         private readonly IMapper _mapper;
         private readonly IAuthService _authService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CalificacionesServices(ApplicationbooksContext context, IMapper mapper, IAuthService authService) 
+        public CalificacionesServices(ApplicationbooksContext context, IMapper mapper, IAuthService authService, IHttpContextAccessor httpContextAccessor) 
         {
             this._context = context;
             this._mapper = mapper;
             this._authService = authService;
+            this._httpContextAccessor = httpContextAccessor;
         }
         public async Task<ResponseDto<List<CalificacionDto>>> GetCalificacionesListAsync()
         {
@@ -33,47 +35,141 @@ namespace Application_books.Services
                 Data = CalificacionDtos,
             };
         }
-        public async Task<ResponseDto<CalificacionDto>> GetCalificacionByAsync(Guid id)
+
+        public async Task<ResponseDto<CalificacionDto>> GetCalificacionByAsync(Guid idLibro)
         {
-            var calificacionEntity = await _context.Calificaciones.FirstOrDefaultAsync(c => c.Id == id);
-            if (calificacionEntity == null)
+            // Extraer el ID del usuario desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ResponseDto<CalificacionDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Usuario no autenticado.",
+                    Data = null
+                };
+            }
+
+            // Buscar el usuario en la base de datos para validar su existencia
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
             {
                 return new ResponseDto<CalificacionDto>
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = "No se encontro registro."
+                    Message = "El usuario no existe.",
+                    Data = null
                 };
             }
-            var calificacionDto = _mapper.Map<CalificacionDto>(calificacionEntity);
+
+            // Buscar si el usuario ya tiene una calificación para este libro
+            var existingCalificacion = await _context.Calificaciones
+                .FirstOrDefaultAsync(c => c.IdUsuario == userId && c.IdLibro == idLibro);
+
+            if (existingCalificacion != null)
+            {
+                // Mapear la calificación al DTO
+                var calificacionDto = _mapper.Map<CalificacionDto>(existingCalificacion);
+
+                return new ResponseDto<CalificacionDto>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "El usuario ya ha calificado este libro.",
+                    Data = calificacionDto
+                };
+            }
+
             return new ResponseDto<CalificacionDto>
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Registro obtenido correctamente.",
-                Data = calificacionDto,
+                Message = "El usuario no ha calificado este libro.",
+                Data = null
             };
         }
+
+
         public async Task<ResponseDto<CalificacionDto>> CreateAsync(CalificacionCreateDto dto)
         {
+            // Extraer el ID del usuario desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ResponseDto<CalificacionDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Usuario no autenticado."
+                };
+            }
+
+            // Buscar el usuario en la base de datos para validar su existencia
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return new ResponseDto<CalificacionDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "El usuario no existe."
+                };
+            }
+
+            // Buscar el libro relacionado
+            var libro = await _context.Libros.FindAsync(dto.IdLibro);
+            if (libro == null)
+            {
+                return new ResponseDto<CalificacionDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "El libro no existe."
+                };
+            }
+
+            // Verificar si el usuario ya calificó el libro
+            var existingCalificacion = await _context.Calificaciones
+                .FirstOrDefaultAsync(c => c.IdUsuario == userId && c.IdLibro == dto.IdLibro);
+
+            if (existingCalificacion != null)
+            {
+                return new ResponseDto<CalificacionDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "El usuario ya ha calificado este libro."
+                };
+            }
+
+            // Mapear el DTO de la calificación a la entidad
             var calificacionEntity = _mapper.Map<CalificacionEntity>(dto);
 
-            //var userIdString = _authService.GetUserId();
-            //var userIdString = _authService.GetUserId();
+            // Asociar las relaciones necesarias
+            calificacionEntity.IdUsuario = userId;
 
             _context.Calificaciones.Add(calificacionEntity);
+
+            // Guardar los cambios en la base de datos
             await _context.SaveChangesAsync();
 
+            // Mapear la entidad recién creada al DTO para la respuesta
             var calificacionDto = _mapper.Map<CalificacionDto>(calificacionEntity);
 
             return new ResponseDto<CalificacionDto>
             {
                 StatusCode = 201,
                 Status = true,
-                Message = "Registro creado coreectamente.",
+                Message = "Calificación creada correctamente.",
                 Data = calificacionDto,
             };
         }
+
+
         public async Task<ResponseDto<CalificacionDto>> EditAsync(CalificacionEditDto dto, Guid id)
         {
             var calificacionEntity = await _context.Calificaciones.FirstOrDefaultAsync(e => e.Id == id);

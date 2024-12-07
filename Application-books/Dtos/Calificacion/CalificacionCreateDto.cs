@@ -7,11 +7,9 @@ namespace Application_books.Dtos.Calificacion
         [Display(Name = "IdLibro")]
         [Required(ErrorMessage = "El Id es requerido.")]
         public Guid IdLibro { get; set; }
-        [Display(Name = "IdUsuario")]
+        [Display(Name = "IdLibro")]
         [Required(ErrorMessage = "El Id es requerido.")]
-        public Guid IdUsuario { get; set; }
-        [Display(Name = "Puntuacion")]
-        [Required(ErrorMessage = "El valor de estrellas es requerido.")]
+
         public int Puntuacion { get; set; }
     }
 }
