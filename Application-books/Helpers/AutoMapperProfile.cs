@@ -69,9 +69,21 @@ namespace Application_books.Helpers
         }
         private void MapsForMembresia()
         {
-            CreateMap<MembresiaEntity, MembresiaDto>();
-            CreateMap<MembresiaCreateDto, MembresiaEntity>();
-            CreateMap<MembresiaEditDto, MembresiaEntity>();
+            // Mapear MembresiaEntity a MembresiaDto
+            CreateMap<MembresiaEntity, MembresiaDto>()
+                .ForMember(dest => dest.ActivaMembresia, opt =>
+                    opt.MapFrom(src => src.FechaFin.HasValue && src.FechaFin.Value > DateTime.Now))
+                .ReverseMap();
+
+            // Mapear MembresiaCreateDto a MembresiaEntity
+            CreateMap<MembresiaCreateDto, MembresiaEntity>()
+                .ForMember(dest => dest.FechaInicio, opt => opt.MapFrom(_ => DateTime.Now))
+                .ForMember(dest => dest.FechaFin, opt => opt.Ignore()) // Será calculado en el servicio
+                .ForMember(dest => dest.DiasRestantes, opt => opt.Ignore()); // Calculado en lógica de negocio
+
+            // Mapear MembresiaEditDto a MembresiaEntity
+            CreateMap<MembresiaEditDto, MembresiaEntity>()
+                .ForMember(dest => dest.TipoMembresia, opt => opt.Condition(src => src.TipoMembresia != null));
         }
         private void MapsForListaFavorito()
         {
@@ -83,7 +95,6 @@ namespace Application_books.Helpers
         private void MapsForComentario()
         {
             CreateMap<ComentarioEntity, ComentarioDto>()
-            .ForMember(dest => dest.NombreUsuario, opt => opt.MapFrom(src => $"{src.Usuario.FirstName} {src.Usuario.LastName}"))
             .ForMember(dest => dest.Respuestas, opt => opt.MapFrom(src => src.Respuestas));
             CreateMap<ComentarioCreateDto, ComentarioEntity>();
             CreateMap<ComentarioEditDto, ComentarioEntity>();

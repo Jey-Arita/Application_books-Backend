@@ -1,6 +1,7 @@
 ﻿using Application_books.Dtos.Common;
 using Application_books.Dtos.Membresia;
 using Application_books.Services.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Application_books.Controllers
@@ -16,37 +17,23 @@ namespace Application_books.Controllers
             this._membresiaServicio = membresiaServicio;
         }
         [HttpGet]
-        public async Task<ActionResult<ResponseDto<List<MembresiaDto>>>> GetAll()
+        public async Task<ActionResult<ResponseDto<MembresiaDto>>> GetById()
         {
-            var response = await _membresiaServicio.GetMembresiaListAsync();
+            var response = await _membresiaServicio.GetMembresiaByUserAsync();
             return StatusCode(response.StatusCode, response);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ResponseDto<MembresiaDto>>> Get(Guid id)
-        {
-            var response = await _membresiaServicio.GetMembresiaByAsync(id);
-            return StatusCode(response.StatusCode, response);
-        }
-
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<ResponseDto<MembresiaDto>>> Create(MembresiaCreateDto dto)
         {
-            var respose = await _membresiaServicio.CreateAsync(dto);
-            return StatusCode(respose.StatusCode, respose);
+            var response = await _membresiaServicio.CreateMembresiaAsync(dto);
+            return StatusCode(response.StatusCode, response);
         }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult<ResponseDto<MembresiaDto>>> Edit(MembresiaEditDto dto, Guid id)
+        [HttpPut]
+        public async Task<ActionResult<ResponseDto<MembresiaDto>>> Edit(MembresiaEditDto dto)
         {
-            var responde = await _membresiaServicio.EditAsync(dto, id);
-            return StatusCode(responde.StatusCode, responde);
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<ResponseDto<MembresiaDto>>> Delete(Guid id)
-        {
-            var response = await _membresiaServicio.DeleteAsync(id);
+            var response = await _membresiaServicio.EditMembresiaAsync(dto);
             return StatusCode(response.StatusCode, response);
         }
     }

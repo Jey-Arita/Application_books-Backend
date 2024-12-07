@@ -6,10 +6,8 @@ namespace Application_books.Services.Interface
 {
     public interface IMembresiaServicio
     {
-        Task<ResponseDto<MembresiaDto>> CreateAsync(MembresiaCreateDto dto);
-        Task<ResponseDto<MembresiaDto>> DeleteAsync(Guid id);
-        Task<ResponseDto<MembresiaDto>> EditAsync(MembresiaEditDto dto, Guid id);
-        Task<ResponseDto<MembresiaDto>> GetMembresiaByAsync(Guid id);
-        Task<ResponseDto<List<MembresiaDto>>> GetMembresiaListAsync();
+        Task<ResponseDto<MembresiaDto>> GetMembresiaByUserAsync();
+        Task<ResponseDto<MembresiaDto>> CreateMembresiaAsync(MembresiaCreateDto dto);
+        Task<ResponseDto<MembresiaDto>> EditMembresiaAsync(MembresiaEditDto dto);
     }
 }

@@ -136,7 +136,7 @@ namespace Application_books.Services
             {
                 var userEntity = await _userManager.FindByEmailAsync(dto.Email);
 
-                await _userManager.AddToRoleAsync(userEntity, RolesConstant.VISIT);
+                await _userManager.AddToRoleAsync(userEntity, RolesConstant.SUSCRIPTOR);
 
                 var authClaims = await GetClaims(userEntity);
 

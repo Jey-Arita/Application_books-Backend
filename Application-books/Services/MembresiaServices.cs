@@ -5,6 +5,7 @@ using Application_books.Dtos.Membresia;
 using Application_books.Services.Interface;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Application_books.Services
 {
@@ -12,90 +13,179 @@ namespace Application_books.Services
     {
         private readonly ApplicationbooksContext _context;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MembresiaServices(ApplicationbooksContext context, IMapper mapper) 
+        public MembresiaServices(ApplicationbooksContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor) 
         {
             this._context = context;
             this._mapper = mapper;
+            this._httpContextAccessor = httpContextAccessor;
         }
-        public async Task<ResponseDto<List<MembresiaDto>>> GetMembresiaListAsync()
+        public async Task<ResponseDto<MembresiaDto>> GetMembresiaByUserAsync()
         {
-            var membresiaEntities = await _context.Membresias.ToListAsync();
+            // Extraer el ID del usuario desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
 
-            foreach (var membresiaEntity in membresiaEntities)
+            if (userId == null)
             {
-                ExpiracionMembresia(membresiaEntity);
+                return new ResponseDto<MembresiaDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Usuario no autenticado."
+                };
             }
 
-            var membresiaDtos = _mapper.Map<List<MembresiaDto>>(membresiaEntities);
+            // Buscar la membresía asociada al usuario
+            var membresiaEntity = await _context.Membresias
+                .FirstOrDefaultAsync(m => m.IdUsuario == userId); // Usamos IdCliente para asociarlo con el usuario
 
-            return new ResponseDto<List<MembresiaDto>>
-            {
-                StatusCode = 200,
-                Status = true,
-                Message = "Lista de toda las membresias obtenida correctamente.",
-                Data = membresiaDtos,
-            };
-        }
-        public async Task<ResponseDto<MembresiaDto>> GetMembresiaByAsync(Guid id)
-        {
-            var membresiaEntity = await _context.Membresias.FirstOrDefaultAsync(c => c.Id == id);
+            // Si no se encuentra la membresía
             if (membresiaEntity == null)
             {
                 return new ResponseDto<MembresiaDto>
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = "No se encontro registro."
+                    Message = "No se encontró la membresía para el usuario proporcionado."
                 };
             }
+
+            // Llamar al método para verificar la expiración de la membresía
             ExpiracionMembresia(membresiaEntity);
+
+            // Mapear la entidad a un DTO para enviarlo
             var membresiaDto = _mapper.Map<MembresiaDto>(membresiaEntity);
 
+            // Retornar la respuesta con la membresía encontrada
             return new ResponseDto<MembresiaDto>
             {
-               StatusCode = 200,
-               Status = true,
-               Message = "Registro obtenido correctamente.",
-               Data = membresiaDto,
-            };
-        }
-        public async Task<ResponseDto<MembresiaDto>> CreateAsync(MembresiaCreateDto dto)
-        {
-            var membresiaEntity = _mapper.Map<MembresiaEntity>(dto);
-
-            membresiaEntity = CalcularMembresia(membresiaEntity);
-            _context.Membresias.Add(membresiaEntity);
-
-            await _context.SaveChangesAsync();
-            var membresiaDto = _mapper.Map<MembresiaDto>(membresiaEntity);
-
-            return new ResponseDto<MembresiaDto>
-            {
-                StatusCode = 201,
+                StatusCode = 200,
                 Status = true,
-                Message = "Reegistro creado coreectamente.",
+                Message = "Membresía obtenida correctamente.",
                 Data = membresiaDto,
             };
         }
-        public async Task<ResponseDto<MembresiaDto>> EditAsync(MembresiaEditDto dto, Guid id)
+
+        public async Task<ResponseDto<MembresiaDto>> CreateMembresiaAsync(MembresiaCreateDto dto)
         {
-            var membresiaEntity = await _context.Membresias.FirstOrDefaultAsync(e => e.Id == id);
+            // Extraer el ID del usuario desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
+
+            if (userId == null)
+            {
+                return new ResponseDto<MembresiaDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Usuario no autenticado."
+                };
+            }
+
+            // Verificar si el usuario ya tiene una membresía activa
+            var existingMembresia = await _context.Membresias
+                .FirstOrDefaultAsync(m => m.IdUsuario == userId && m.FechaFin > DateTime.Now); // Membresía activa
+
+            if (existingMembresia != null)
+            {
+                // Si el usuario ya tiene una membresía activa, proceder con la actualización
+                // Mapear los datos de dto a la entidad existente
+                _mapper.Map(dto, existingMembresia);
+                existingMembresia = CalcularMembresia(existingMembresia, dto.TipoMembresia);
+
+                // Actualizar la membresía en la base de datos
+                _context.Membresias.Update(existingMembresia);
+                await _context.SaveChangesAsync();
+
+                // Mapear a DTO
+                var membresiaDto = _mapper.Map<MembresiaDto>(existingMembresia);
+
+                return new ResponseDto<MembresiaDto>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "Membresía actualizada correctamente.",
+                    Data = membresiaDto
+                };
+            }
+            else
+            {
+                // Si el usuario no tiene una membresía activa, crear una nueva
+                var membresiaEntity = _mapper.Map<MembresiaEntity>(dto);
+                membresiaEntity.IdUsuario = userId;  // Asociar el ID de usuario
+
+                // Calcular la fecha de inicio y fin según el tipo de membresía
+                membresiaEntity = CalcularMembresia(membresiaEntity, dto.TipoMembresia);
+
+                // Agregar la nueva membresía al contexto
+                _context.Membresias.Add(membresiaEntity);
+                await _context.SaveChangesAsync();
+
+                // Mapear a DTO
+                var membresiaDto = _mapper.Map<MembresiaDto>(membresiaEntity);
+
+                return new ResponseDto<MembresiaDto>
+                {
+                    StatusCode = 201,
+                    Status = true,
+                    Message = "Membresía creada correctamente.",
+                    Data = membresiaDto
+                };
+            }
+        }
+
+
+        public async Task<ResponseDto<MembresiaDto>> EditMembresiaAsync(MembresiaEditDto dto)
+        {
+            // Extraer el ID del usuario desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
+
+            if (userId == null)
+            {
+                return new ResponseDto<MembresiaDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Usuario no autenticado."
+                };
+            }
+
+            // Buscar la membresía asociada al usuario
+            var membresiaEntity = await _context.Membresias
+                .FirstOrDefaultAsync(m => m.IdUsuario == userId);
+
             if (membresiaEntity is null)
             {
                 return new ResponseDto<MembresiaDto>
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = $"El registro registro"
+                    Message = "El registro no fue encontrado."
                 };
             }
-            _mapper.Map<MembresiaEditDto, MembresiaEntity>(dto, membresiaEntity);
-            membresiaEntity = CalcularMembresia(membresiaEntity);
 
+            // Validar si el tipo de membresía es "Premium", "Gratis" o "Prueba"
+            if (dto.TipoMembresia != "Premium" && dto.TipoMembresia != "Gratis" && dto.TipoMembresia != "Prueba")
+            {
+                return new ResponseDto<MembresiaDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Solo se puede actualizar membresías de tipo 'Premium', 'Gratis' o 'Prueba'."
+                };
+            }
+
+            // Mapear los datos de dto a la entidad
+            _mapper.Map(dto, membresiaEntity);
+
+            // Calcular la membresía, si es necesario
+            membresiaEntity = CalcularMembresia(membresiaEntity, dto.TipoMembresia);
+
+            // Actualizar la membresía en la base de datos
             _context.Membresias.Update(membresiaEntity);
-
             await _context.SaveChangesAsync();
+
+            // Mapear la entidad a un DTO para la respuesta
             var membresiaDto = _mapper.Map<MembresiaDto>(membresiaEntity);
 
             return new ResponseDto<MembresiaDto>
@@ -106,50 +196,49 @@ namespace Application_books.Services
                 Data = membresiaDto
             };
         }
-        public async Task<ResponseDto<MembresiaDto>> DeleteAsync(Guid id)
+
+        private MembresiaEntity CalcularMembresia(MembresiaEntity entity, string tipoMembresia)
         {
-            var librosEntity = await _context.Membresias.FirstOrDefaultAsync(x => x.Id == id);
-            if (librosEntity == null)
+            switch (tipoMembresia)
             {
-                return new ResponseDto<MembresiaDto>
-                {
-                    StatusCode = 404,
-                    Status = false,
-                    Message = $"No se encontro el registro"
-                };
+                case "Gratis":
+                    entity.FechaInicio = DateTime.Now;
+                    entity.FechaFin = DateTime.Now;
+                    entity.DiasRestantes = 0;
+                    break;
+
+                case "Prueba":
+                    entity.FechaInicio = DateTime.Now;
+                    entity.FechaFin = DateTime.Now.AddDays(7);
+                    entity.DiasRestantes = 7;
+                    break;
+
+                case "Premium":
+                    entity.FechaInicio = DateTime.Now;
+                    entity.FechaFin = DateTime.Now.AddMonths(1);
+                    entity.DiasRestantes = (entity.FechaFin - DateTime.Now).Value.Days;
+                    break;
+
+                case "":
+                    entity.TipoMembresia = "Gratis";
+                    entity.FechaInicio = DateTime.Now;
+                    entity.FechaFin = DateTime.Now.AddMonths(1);
+                    entity.DiasRestantes = (entity.FechaFin - DateTime.Now).Value.Days;
+                    break;
+
+
+                default:
+                    throw new ArgumentException("Tipo de membresía no válida.");
             }
 
-            _context.Membresias.Remove(librosEntity);
-            await _context.SaveChangesAsync();
-            return new ResponseDto<MembresiaDto>
-            {
-                StatusCode = 200,
-                Status = true,
-                Message = "Registro borrado correctamente"
-            };
-        }
-        private MembresiaEntity CalcularMembresia(MembresiaEntity entity)
-        {
-            if (entity.ActivaMembresia)
-            {
-                if (entity.FechaFin == null || entity.FechaFin.Value <= DateTime.Now)
-                {
-                    entity.FechaInicio = DateTime.Now;
-                    entity.FechaFin = DateTime.Now.AddDays(30);
-                }
-                entity.FechaCancelacion = null;
-            }
-            else
-            {
-                entity.FechaCancelacion = DateTime.Now;
-            }
             return entity;
         }
+
         private void ExpiracionMembresia(MembresiaEntity entity)
         {
             if (entity.FechaFin.HasValue && entity.FechaFin.Value <= DateTime.Now)
             {
-                entity.ActivaMembresia = false;
+                entity.TipoMembresia = "Gratis";
                 entity.FechaFin = null;
             }
         }
