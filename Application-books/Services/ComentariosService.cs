@@ -38,12 +38,12 @@ namespace Application_books.Services
         }
         public async Task<ResponseDto<List<ComentarioDto>>> GetComentarioByAsync(Guid id)
         {
-            // Cargar los comentarios principales junto con las respuestas y el usuario de cada respuesta
+            // Cargar los comentarios principales (aquellos que no son respuestas) junto con sus respuestas y los usuarios
             var comentarioEntities = await _context.Comentarios
-                .Where(c => c.IdLibro == id) // Filtrar por el ID del libro
+                .Where(c => c.IdLibro == id && c.IdComentarioPadre == null) // Filtrar solo los comentarios principales
                 .Include(c => c.Usuario) // Incluir el usuario que hizo el comentario principal
                 .Include(c => c.Respuestas) // Incluir las respuestas de cada comentario
-                .ThenInclude(r => r.Usuario) // Incluir el usuario de cada respuesta
+                    .ThenInclude(r => r.Usuario) // Incluir el usuario de cada respuesta
                 .ToListAsync();
 
             // Verificar si no se encontraron comentarios
@@ -99,7 +99,7 @@ namespace Application_books.Services
             // Mapea el DTO a la entidad de comentario
             var comentarioEntity = _mapper.Map<ComentarioEntity>(dto);
             comentarioEntity.IdUsuario = userId; // Asocia el ID del usuario
-            comentarioEntity.NombreUsuario = user.FirstName + user.LastName; // Asocia el nombre del usuario
+            comentarioEntity.NombreUsuario = user.FirstName + " " + user.LastName; // Asocia el nombre del usuario
 
             // Si el DTO incluye un IdComentarioPadre, significa que este comentario es una respuesta
             if (dto.IdComentarioPadre.HasValue)
@@ -164,6 +164,20 @@ namespace Application_books.Services
         }
         public async Task<ResponseDto<ComentarioDto>> DeleteAsync(Guid id)
         {
+            // Extraer el ID del usuario desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ResponseDto<ComentarioDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Usuario no autenticado."
+                };
+            }
+
+            // Buscar el comentario en la base de datos
             var comentarioEntity = await _context.Comentarios.FirstOrDefaultAsync(x => x.Id == id);
             if (comentarioEntity == null)
             {
@@ -171,18 +185,32 @@ namespace Application_books.Services
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = $"No se encontro el registro"
+                    Message = "No se encontró el comentario."
                 };
             }
 
+            // Verificar que el usuario autenticado es el mismo que creó el comentario
+            if (comentarioEntity.IdUsuario != userId)
+            {
+                return new ResponseDto<ComentarioDto>
+                {
+                    StatusCode = 403,
+                    Status = false,
+                    Message = "No tienes permiso para eliminar este comentario."
+                };
+            }
+
+            // Eliminar el comentario
             _context.Comentarios.Remove(comentarioEntity);
             await _context.SaveChangesAsync();
+
             return new ResponseDto<ComentarioDto>
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Registro borrado correctamente"
+                Message = "Comentario eliminado correctamente."
             };
         }
+
     }
 }
