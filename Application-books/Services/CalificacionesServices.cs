@@ -138,18 +138,24 @@ namespace Application_books.Services
 
             if (existingCalificacion != null)
             {
+                // Actualizar la calificación existente
+                existingCalificacion.Puntuacion = dto.Puntuacion;
+
+                _context.Calificaciones.Update(existingCalificacion);
+                await _context.SaveChangesAsync();
+
+                var updatedDto = _mapper.Map<CalificacionDto>(existingCalificacion);
                 return new ResponseDto<CalificacionDto>
                 {
-                    StatusCode = 400,
-                    Status = false,
-                    Message = "El usuario ya ha calificado este libro."
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "Calificación actualizada correctamente.",
+                    Data = updatedDto,
                 };
             }
 
-            // Mapear el DTO de la calificación a la entidad
+            // Crear una nueva calificación si no existe
             var calificacionEntity = _mapper.Map<CalificacionEntity>(dto);
-
-            // Asociar las relaciones necesarias
             calificacionEntity.IdUsuario = userId;
 
             _context.Calificaciones.Add(calificacionEntity);
@@ -157,7 +163,6 @@ namespace Application_books.Services
             // Guardar los cambios en la base de datos
             await _context.SaveChangesAsync();
 
-            // Mapear la entidad recién creada al DTO para la respuesta
             var calificacionDto = _mapper.Map<CalificacionDto>(calificacionEntity);
 
             return new ResponseDto<CalificacionDto>
