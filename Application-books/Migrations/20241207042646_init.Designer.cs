@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Application_books.Migrations
 {
     [DbContext(typeof(ApplicationbooksContext))]
-    [Migration("20241206203844_RenameComentario")]
-    partial class RenameComentario
+    [Migration("20241207042646_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -251,6 +251,11 @@ namespace Application_books.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("id_usuario");
 
+                    b.Property<string>("NombreUsuario")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("usuario");
+
                     b.Property<string>("UpdatedBy")
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)")
@@ -259,11 +264,6 @@ namespace Application_books.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_date");
-
-                    b.Property<string>("usuario")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("usuario");
 
                     b.HasKey("Id");
 

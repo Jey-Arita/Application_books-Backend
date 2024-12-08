@@ -248,6 +248,11 @@ namespace Application_books.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("id_usuario");
 
+                    b.Property<string>("NombreUsuario")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("usuario");
+
                     b.Property<string>("UpdatedBy")
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)")
@@ -256,11 +261,6 @@ namespace Application_books.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_date");
-
-                    b.Property<string>("usuario")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("usuario");
 
                     b.HasKey("Id");
 

@@ -19,7 +19,7 @@ namespace Application_books.Controllers
             this._listaFavoritoServices = listaFavoritoServices;
         }
 
-        [HttpGet]
+        [HttpGet()]
         [Authorize(Roles = $"{RolesConstant.ADMIN}, {RolesConstant.SUSCRIPTOR}")]
         public async Task<ActionResult<ResponseDto<List<ListaFavoritoDto>>>> GetAll()
         {
