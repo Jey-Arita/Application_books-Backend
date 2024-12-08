@@ -27,14 +27,14 @@ namespace Application_books.Controllers
         [HttpPost]
         public async Task<ActionResult<ResponseDto<MembresiaDto>>> Create(MembresiaCreateDto dto)
         {
-            var response = await _membresiaServicio.CreateMembresiaAsync(dto);
+            var response = await _membresiaServicio.CreateOrUpdateMembresiaAsync(dto);
             return StatusCode(response.StatusCode, response);
         }
-        [HttpPut]
-        public async Task<ActionResult<ResponseDto<MembresiaDto>>> Edit(MembresiaEditDto dto)
-        {
-            var response = await _membresiaServicio.EditMembresiaAsync(dto);
-            return StatusCode(response.StatusCode, response);
-        }
+        //[HttpPut]
+        //public async Task<ActionResult<ResponseDto<MembresiaDto>>> Edit(MembresiaEditDto dto)
+        //{
+        //    var response = await _membresiaServicio.EditMembresiaAsync(dto);
+        //    return StatusCode(response.StatusCode, response);
+        //}
     }
 }

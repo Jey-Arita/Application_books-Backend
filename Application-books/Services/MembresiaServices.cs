@@ -15,17 +15,16 @@ namespace Application_books.Services
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MembresiaServices(ApplicationbooksContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor) 
+        public MembresiaServices(ApplicationbooksContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
-            this._context = context;
-            this._mapper = mapper;
-            this._httpContextAccessor = httpContextAccessor;
+            _context = context;
+            _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
+
         public async Task<ResponseDto<MembresiaDto>> GetMembresiaByUserAsync()
         {
-            // Extraer el ID del usuario desde el token
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
-
+            var userId = GetUserId();
             if (userId == null)
             {
                 return new ResponseDto<MembresiaDto>
@@ -36,11 +35,9 @@ namespace Application_books.Services
                 };
             }
 
-            // Buscar la membresía asociada al usuario
             var membresiaEntity = await _context.Membresias
-                .FirstOrDefaultAsync(m => m.IdUsuario == userId); // Usamos IdCliente para asociarlo con el usuario
+                .FirstOrDefaultAsync(m => m.IdUsuario == userId);
 
-            // Si no se encuentra la membresía
             if (membresiaEntity == null)
             {
                 return new ResponseDto<MembresiaDto>
@@ -51,27 +48,30 @@ namespace Application_books.Services
                 };
             }
 
-            // Llamar al método para verificar la expiración de la membresía
+            // Verificar y actualizar el estado de la membresía
             ExpiracionMembresia(membresiaEntity);
 
-            // Mapear la entidad a un DTO para enviarlo
+            // Recalcular los días restantes dinámicamente
+            membresiaEntity.DiasRestantes = CalcularDiasRestantes(membresiaEntity.FechaFin);
+
+            // Guardar cambios si hay actualizaciones
+            _context.Membresias.Update(membresiaEntity);
+            await _context.SaveChangesAsync();
+
             var membresiaDto = _mapper.Map<MembresiaDto>(membresiaEntity);
 
-            // Retornar la respuesta con la membresía encontrada
             return new ResponseDto<MembresiaDto>
             {
                 StatusCode = 200,
                 Status = true,
                 Message = "Membresía obtenida correctamente.",
-                Data = membresiaDto,
+                Data = membresiaDto
             };
         }
 
-        public async Task<ResponseDto<MembresiaDto>> CreateMembresiaAsync(MembresiaCreateDto dto)
+        public async Task<ResponseDto<MembresiaDto>> CreateOrUpdateMembresiaAsync(MembresiaCreateDto dto)
         {
-            // Extraer el ID del usuario desde el token
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
-
+            var userId = GetUserId();
             if (userId == null)
             {
                 return new ResponseDto<MembresiaDto>
@@ -82,118 +82,65 @@ namespace Application_books.Services
                 };
             }
 
-            // Verificar si el usuario ya tiene una membresía activa
+            // Buscar membresía existente del usuario
             var existingMembresia = await _context.Membresias
-                .FirstOrDefaultAsync(m => m.IdUsuario == userId && m.FechaFin > DateTime.Now); // Membresía activa
+                .FirstOrDefaultAsync(m => m.IdUsuario == userId);
 
             if (existingMembresia != null)
             {
-                // Si el usuario ya tiene una membresía activa, proceder con la actualización
-                // Mapear los datos de dto a la entidad existente
-                _mapper.Map(dto, existingMembresia);
-                existingMembresia = CalcularMembresia(existingMembresia, dto.TipoMembresia);
+                // Extender membresía existente
+                if (existingMembresia.FechaFin.HasValue && existingMembresia.FechaFin.Value > DateTime.Now)
+                {
+                    existingMembresia.FechaFin = CalcularExtension(existingMembresia.FechaFin.Value, dto.TipoMembresia);
+                }
+                else
+                {
+                    // Reactivar membresía si está vencida
+                    _mapper.Map(dto, existingMembresia);
+                    existingMembresia = CalcularMembresia(existingMembresia, dto.TipoMembresia);
+                }
 
-                // Actualizar la membresía en la base de datos
+                // Actualización del estado si estaba expirada
+                ExpiracionMembresia(existingMembresia);
+
                 _context.Membresias.Update(existingMembresia);
                 await _context.SaveChangesAsync();
 
-                // Mapear a DTO
-                var membresiaDto = _mapper.Map<MembresiaDto>(existingMembresia);
-
+                var updatedMembresiaDto = _mapper.Map<MembresiaDto>(existingMembresia);
                 return new ResponseDto<MembresiaDto>
                 {
                     StatusCode = 200,
                     Status = true,
                     Message = "Membresía actualizada correctamente.",
-                    Data = membresiaDto
-                };
-            }
-            else
-            {
-                // Si el usuario no tiene una membresía activa, crear una nueva
-                var membresiaEntity = _mapper.Map<MembresiaEntity>(dto);
-                membresiaEntity.IdUsuario = userId;  // Asociar el ID de usuario
-
-                // Calcular la fecha de inicio y fin según el tipo de membresía
-                membresiaEntity = CalcularMembresia(membresiaEntity, dto.TipoMembresia);
-
-                // Agregar la nueva membresía al contexto
-                _context.Membresias.Add(membresiaEntity);
-                await _context.SaveChangesAsync();
-
-                // Mapear a DTO
-                var membresiaDto = _mapper.Map<MembresiaDto>(membresiaEntity);
-
-                return new ResponseDto<MembresiaDto>
-                {
-                    StatusCode = 201,
-                    Status = true,
-                    Message = "Membresía creada correctamente.",
-                    Data = membresiaDto
-                };
-            }
-        }
-
-
-        public async Task<ResponseDto<MembresiaDto>> EditMembresiaAsync(MembresiaEditDto dto)
-        {
-            // Extraer el ID del usuario desde el token
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
-
-            if (userId == null)
-            {
-                return new ResponseDto<MembresiaDto>
-                {
-                    StatusCode = 400,
-                    Status = false,
-                    Message = "Usuario no autenticado."
+                    Data = updatedMembresiaDto
                 };
             }
 
-            // Buscar la membresía asociada al usuario
-            var membresiaEntity = await _context.Membresias
-                .FirstOrDefaultAsync(m => m.IdUsuario == userId);
+            // Crear nueva membresía si no existe ninguna
+            var newMembresia = _mapper.Map<MembresiaEntity>(dto);
+            newMembresia.IdUsuario = userId;
+            newMembresia = CalcularMembresia(newMembresia, dto.TipoMembresia);
 
-            if (membresiaEntity is null)
-            {
-                return new ResponseDto<MembresiaDto>
-                {
-                    StatusCode = 404,
-                    Status = false,
-                    Message = "El registro no fue encontrado."
-                };
-            }
-
-            // Validar si el tipo de membresía es "Premium", "Gratis" o "Prueba"
-            if (dto.TipoMembresia != "Premium" && dto.TipoMembresia != "Gratis" && dto.TipoMembresia != "Prueba")
-            {
-                return new ResponseDto<MembresiaDto>
-                {
-                    StatusCode = 400,
-                    Status = false,
-                    Message = "Solo se puede actualizar membresías de tipo 'Premium', 'Gratis' o 'Prueba'."
-                };
-            }
-
-            // Mapear los datos de dto a la entidad
-            _mapper.Map(dto, membresiaEntity);
-
-            // Calcular la membresía, si es necesario
-            membresiaEntity = CalcularMembresia(membresiaEntity, dto.TipoMembresia);
-
-            // Actualizar la membresía en la base de datos
-            _context.Membresias.Update(membresiaEntity);
+            _context.Membresias.Add(newMembresia);
             await _context.SaveChangesAsync();
 
-            // Mapear la entidad a un DTO para la respuesta
-            var membresiaDto = _mapper.Map<MembresiaDto>(membresiaEntity);
-
+            var newMembresiaDto = _mapper.Map<MembresiaDto>(newMembresia);
             return new ResponseDto<MembresiaDto>
             {
-                StatusCode = 200,
+                StatusCode = 201,
                 Status = true,
-                Message = "Registro editado correctamente.",
-                Data = membresiaDto
+                Message = "Membresía creada correctamente.",
+                Data = newMembresiaDto
+            };
+        }
+
+        private DateTime CalcularExtension(DateTime fechaActual, string tipoMembresia)
+        {
+            return tipoMembresia switch
+            {
+                "Prueba" => fechaActual.AddDays(7),
+                "Premium" => fechaActual.AddMonths(1),
+                _ => fechaActual // No se extiende para tipos no válidos
             };
         }
 
@@ -203,34 +150,25 @@ namespace Application_books.Services
             {
                 case "Gratis":
                     entity.FechaInicio = DateTime.Now;
-                    entity.FechaFin = DateTime.Now;
+                    entity.FechaFin = null;
                     entity.DiasRestantes = 0;
                     break;
 
                 case "Prueba":
                     entity.FechaInicio = DateTime.Now;
                     entity.FechaFin = DateTime.Now.AddDays(7);
-                    entity.DiasRestantes = 7;
                     break;
 
                 case "Premium":
                     entity.FechaInicio = DateTime.Now;
                     entity.FechaFin = DateTime.Now.AddMonths(1);
-                    entity.DiasRestantes = (entity.FechaFin - DateTime.Now).Value.Days;
                     break;
-
-                case "":
-                    entity.TipoMembresia = "Gratis";
-                    entity.FechaInicio = DateTime.Now;
-                    entity.FechaFin = DateTime.Now.AddMonths(1);
-                    entity.DiasRestantes = (entity.FechaFin - DateTime.Now).Value.Days;
-                    break;
-
 
                 default:
                     throw new ArgumentException("Tipo de membresía no válida.");
             }
 
+            entity.DiasRestantes = CalcularDiasRestantes(entity.FechaFin);
             return entity;
         }
 
@@ -240,7 +178,21 @@ namespace Application_books.Services
             {
                 entity.TipoMembresia = "Gratis";
                 entity.FechaFin = null;
+                entity.DiasRestantes = 0;
             }
+        }
+
+        private int CalcularDiasRestantes(DateTime? fechaFin)
+        {
+            if (!fechaFin.HasValue || fechaFin.Value <= DateTime.Now)
+                return 0;
+
+            return (fechaFin.Value - DateTime.Now).Days;
+        }
+
+        private string GetUserId()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
         }
     }
 }

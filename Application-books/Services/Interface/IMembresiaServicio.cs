@@ -7,7 +7,7 @@ namespace Application_books.Services.Interface
     public interface IMembresiaServicio
     {
         Task<ResponseDto<MembresiaDto>> GetMembresiaByUserAsync();
-        Task<ResponseDto<MembresiaDto>> CreateMembresiaAsync(MembresiaCreateDto dto);
-        Task<ResponseDto<MembresiaDto>> EditMembresiaAsync(MembresiaEditDto dto);
+        Task<ResponseDto<MembresiaDto>> CreateOrUpdateMembresiaAsync(MembresiaCreateDto dto);
+       // Task<ResponseDto<MembresiaDto>> EditMembresiaAsync(MembresiaEditDto dto);
     }
 }
