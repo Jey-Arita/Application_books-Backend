@@ -127,15 +127,19 @@ namespace Application_books.Services
 
             // Validar si ya existe como favorito para el usuario
             var existeFavorito = await _context.ListaFavoritos
-                .AnyAsync(f => f.IdUsuario == userId && f.IdLibro == dto.IdLibro); // Cambiar IdElemento según corresponda
+                .FirstOrDefaultAsync(f => f.IdUsuario == userId && f.IdLibro == dto.IdLibro); // Buscar el registro en lugar de solo comprobar con AnyAsync
 
-            if (existeFavorito)
+            if (existeFavorito != null) // Si ya existe el registro
             {
+                // Eliminar el elemento de la lista de favoritos
+                _context.ListaFavoritos.Remove(existeFavorito);
+                await _context.SaveChangesAsync();
+
                 return new ResponseDto<ListaFavoritoDto>
                 {
-                    StatusCode = 409,
-                    Status = false,
-                    Message = "El elemento ya está en tu lista de favoritos.",
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "El elemento fue eliminado de tu lista de favoritos.",
                     Data = null,
                 };
             }
@@ -155,10 +159,11 @@ namespace Application_books.Services
             {
                 StatusCode = 201,
                 Status = true,
-                Message = "Registro creado correctamente.",
+                Message = "Se agregó el elemento a tu lista de favoritos.",
                 Data = listaFavDto,
             };
         }
+
 
 
         public async Task<ResponseDto<ListaFavoritoDto>> DeleteAsync(Guid id)
