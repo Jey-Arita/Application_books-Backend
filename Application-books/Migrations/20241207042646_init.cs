@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Application_books.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTablaGeneros : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -142,10 +142,10 @@ namespace Application_books.Migrations
                 {
                     id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     id_usuario = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    activa_membresia = table.Column<bool>(type: "bit", nullable: false),
+                    tipo_membresia = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     fecha_inicio = table.Column<DateTime>(type: "datetime2", nullable: false),
                     fecha_fin = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    fecha_cancelacion = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    dias_restantes = table.Column<int>(type: "int", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
                     created_date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
@@ -379,6 +379,7 @@ namespace Application_books.Migrations
                     id_usuario = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     comentario = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     fecha = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    usuario = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     id_comentario_padre = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
                     created_date = table.Column<DateTime>(type: "datetime2", nullable: false),
