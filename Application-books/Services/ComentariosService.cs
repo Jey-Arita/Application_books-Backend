@@ -178,7 +178,10 @@ namespace Application_books.Services
             }
 
             // Buscar el comentario en la base de datos
-            var comentarioEntity = await _context.Comentarios.FirstOrDefaultAsync(x => x.Id == id);
+            var comentarioEntity = await _context.Comentarios
+                .Include(c => c.Respuestas) // Incluir las respuestas relacionadas
+                .FirstOrDefaultAsync(x => x.Id == id);
+
             if (comentarioEntity == null)
             {
                 return new ResponseDto<ComentarioDto>
@@ -189,7 +192,7 @@ namespace Application_books.Services
                 };
             }
 
-            // Verificar que el usuario autenticado es el mismo que creó el comentario
+            // Verificar permisos del usuario autenticado
             if (comentarioEntity.IdUsuario != userId)
             {
                 return new ResponseDto<ComentarioDto>
@@ -200,17 +203,38 @@ namespace Application_books.Services
                 };
             }
 
-            // Eliminar el comentario
-            _context.Comentarios.Remove(comentarioEntity);
-            await _context.SaveChangesAsync();
-
-            return new ResponseDto<ComentarioDto>
+            try
             {
-                StatusCode = 200,
-                Status = true,
-                Message = "Comentario eliminado correctamente."
-            };
+                // Eliminar respuestas relacionadas primero
+                if (comentarioEntity.Respuestas.Any())
+                {
+                    _context.Comentarios.RemoveRange(comentarioEntity.Respuestas);
+                }
+
+                // Eliminar el comentario principal
+                _context.Comentarios.Remove(comentarioEntity);
+
+                // Guardar cambios en la base de datos
+                await _context.SaveChangesAsync();
+
+                return new ResponseDto<ComentarioDto>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "Comentario principal y todas sus respuestas eliminados correctamente."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto<ComentarioDto>
+                {
+                    StatusCode = 500,
+                    Status = false,
+                    Message = $"Error interno en el servidor: {ex.Message}"
+                };
+            }
         }
+
 
     }
 }
