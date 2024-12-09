@@ -23,9 +23,81 @@ namespace Application_books.Services
             this._httpContextAccessor = httpContextAccessor;
         }
 
+        public async Task<ResponseDto<bool>> IsLibroFavoritoAsync(Guid idLibro)
+        {
+            // Obtener el ID del usuario autenticado desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ResponseDto<bool>
+                {
+                    StatusCode = 401,
+                    Status = false,
+                    Message = "No autorizado. No se pudo obtener el ID del usuario.",
+                    Data = false,
+                };
+            }
+
+            // Verificar si el libro específico está en la lista de favoritos
+            var esFavorito = await _context.ListaFavoritos
+                .AnyAsync(f => f.IdUsuario == userId && f.IdLibro == idLibro);
+
+            if (!esFavorito)
+            {
+                return new ResponseDto<bool>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "El libro no está en la lista de favoritos.",
+                    Data = false,
+                };
+            }
+
+            return new ResponseDto<bool>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "El libro ya está marcado como favorito.",
+                Data = true,
+            };
+        }
+
+
         public async Task<ResponseDto<List<ListaFavoritoDto>>> GetListaFavoritoListAsync()
         {
-            var listaFavEntity = await _context.ListaFavoritos.ToListAsync();
+            // Obtener el ID del usuario autenticado desde el token
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new ResponseDto<List<ListaFavoritoDto>>
+                {
+                    StatusCode = 401,
+                    Status = false,
+                    Message = "No autorizado. No se pudo obtener el ID del usuario.",
+                    Data = null,
+                };
+            }
+
+            // Filtrar los libros favoritos por el ID del usuario
+            var listaFavEntity = await _context.ListaFavoritos
+                .Where(f => f.IdUsuario == userId)
+                .Include(f => f.Libro) // Incluye la entidad relacionada del libro (si existe)
+                .ToListAsync();
+
+            if (!listaFavEntity.Any())
+            {
+                return new ResponseDto<List<ListaFavoritoDto>>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "No se encontraron libros favoritos para el usuario.",
+                    Data = null,
+                };
+            }
+
+            // Mapear las entidades a DTOs
             var listaFavDto = _mapper.Map<List<ListaFavoritoDto>>(listaFavEntity);
 
             return new ResponseDto<List<ListaFavoritoDto>>
@@ -88,32 +160,6 @@ namespace Application_books.Services
             };
         }
 
-
-        public async Task<ResponseDto<ListaFavoritoDto>> EditAsync(ListaFavoritoEditDto dto, Guid id)
-        {
-            var listaFavEntity = await _context.ListaFavoritos.FirstOrDefaultAsync(e => e.Id == id);
-            if (listaFavEntity is null)
-            {
-                return new ResponseDto<ListaFavoritoDto>
-                {
-                    StatusCode = 404,
-                    Status = false,
-                    Message = $"El registro registro"
-                };
-            }
-            _mapper.Map<ListaFavoritoEditDto, ListaFavoritoEntity>(dto, listaFavEntity);
-            _context.ListaFavoritos.Update(listaFavEntity);
-            await _context.SaveChangesAsync();
-
-            var listaFavDto = _mapper.Map<ListaFavoritoDto>(listaFavEntity);
-            return new ResponseDto<ListaFavoritoDto>
-            {
-                StatusCode = 200,
-                Status = true,
-                Message = "Registro editado correctamente.",
-                Data = listaFavDto
-            };
-        }
 
         public async Task<ResponseDto<ListaFavoritoDto>> DeleteAsync(Guid id)
         {

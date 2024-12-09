@@ -34,12 +34,12 @@ namespace Application_books.Controllers
             return StatusCode(respose.StatusCode, respose);
         }
 
-        [HttpPut("{id}")]
+        [HttpGet("is-favorito/{idLibro}")]
         [Authorize(Roles = $"{RolesConstant.ADMIN}, {RolesConstant.SUSCRIPTOR}")]
-        public async Task<ActionResult<ResponseDto<ListaFavoritoDto>>> Edit(ListaFavoritoEditDto dto, Guid id)
+        public async Task<IActionResult> IsFavorito(Guid idLibro)
         {
-            var responde = await _listaFavoritoServices.EditAsync(dto, id);
-            return StatusCode(responde.StatusCode, responde);
+            var result = await _listaFavoritoServices.IsLibroFavoritoAsync(idLibro);
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
