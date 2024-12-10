@@ -5,6 +5,7 @@ using Application_books.Dtos.Auth;
 using Application_books.Dtos.Common;
 using Application_books.Services.Interface;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -44,6 +45,19 @@ namespace Application_books.Services
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim("UserId", userEntity.Id),
                 };
+
+            // Recuperar el tipo de membresía del usuario
+            var membresia = await _context.Membresias
+                .Where(m => m.IdUsuario == userEntity.Id)
+                .Select(m => m.TipoMembresia)
+                .FirstOrDefaultAsync();
+
+            // Verificar si se encontró una membresía antes de agregar el claim
+            if (!string.IsNullOrEmpty(membresia))
+            {
+                authClaims.Add(new Claim("Membresia", membresia));
+            }
+
 
             var userRoles = await _userManager.GetRolesAsync(userEntity);
             foreach (var role in userRoles)

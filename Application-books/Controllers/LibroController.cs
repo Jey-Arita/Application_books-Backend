@@ -20,7 +20,7 @@ namespace Application_books.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize(Roles = $"{RolesConstant.SUSCRIPTOR}")]
         public async Task<ActionResult<ResponseDto<PaginationDto<List<LibroDto>>>>> PaginationList(string searchTerm, int page = 1) 
         {
             var response = await _librosServices.GetLibroListAsync(searchTerm, page);
@@ -42,12 +42,15 @@ namespace Application_books.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = $"{RolesConstant.ADMIN}, {RolesConstant.SUSCRIPTOR}")]
+        [Authorize(Policy = "AdminOrSubscriberAndPremium")]
         public async Task<ActionResult<ResponseDto<LibroDto>>> Get(Guid id)
         {
-            var response = await _librosServices.GetLibroByAsync(id);  
+            var response = await _librosServices.GetLibroByAsync(id);
             return StatusCode(response.StatusCode, response);
         }
+
+
+
 
         [HttpPost]
         [Authorize(Roles = $"{RolesConstant.ADMIN}")]

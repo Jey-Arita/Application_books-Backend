@@ -1,4 +1,5 @@
-﻿using Application_books.Database;
+﻿using Application_books.Constants;
+using Application_books.Database;
 using Application_books.Database.Entities;
 using Application_books.Database.Entitties;
 using Application_books.Helpers;
@@ -68,6 +69,16 @@ namespace Application_books
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
                 };
             });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AdminOrSubscriberAndPremium", policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.IsInRole(RolesConstant.ADMIN) ||
+                        (context.User.IsInRole(RolesConstant.SUSCRIPTOR) &&
+                         context.User.HasClaim(c => c.Type == "Membresia" && (c.Value == "Premium")))));
+            });
+
 
 
             // Configurar AutoMapper
