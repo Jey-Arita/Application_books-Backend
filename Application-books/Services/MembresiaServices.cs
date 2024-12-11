@@ -47,14 +47,11 @@ namespace Application_books.Services
                     Message = "No se encontró la membresía para el usuario proporcionado."
                 };
             }
-
-            // Verificar y actualizar el estado de la membresía
+   
             ExpiracionMembresia(membresiaEntity);
 
-            // Recalcular los días restantes dinámicamente
             membresiaEntity.DiasRestantes = CalcularDiasRestantes(membresiaEntity.FechaFin);
 
-            // Guardar cambios si hay actualizaciones
             _context.Membresias.Update(membresiaEntity);
             await _context.SaveChangesAsync();
 
@@ -82,20 +79,20 @@ namespace Application_books.Services
                 };
             }
 
-            // Buscar membresía existente del usuario
+            // Buscamos si el usuario tiene membresia
             var existingMembresia = await _context.Membresias
                 .FirstOrDefaultAsync(m => m.IdUsuario == userId);
 
             if (existingMembresia != null)
             {
-                // Extender membresía existente
+                //Extender la membresia por mas tiempo
                 if (existingMembresia.FechaFin.HasValue && existingMembresia.FechaFin.Value > DateTime.Now)
                 {
                     existingMembresia.FechaFin = CalcularExtension(existingMembresia.FechaFin.Value, dto.TipoMembresia);
                 }
                 else
                 {
-                    // Reactivar membresía si está vencida
+                    // Reactivar membresía si se encuantr
                     _mapper.Map(dto, existingMembresia);
                     existingMembresia = CalcularMembresia(existingMembresia, dto.TipoMembresia);
                 }

@@ -52,25 +52,25 @@ namespace Application_books.Database
                     var userAdmin = new UserEntity
                     {
                         FirstName = "Administrador",
-                        LastName = "Blog",
-                        Email = "admin@blogunah.edu",
-                        UserName = "admin@blogunah.edu",
+                        LastName = "Book",
+                        Email = "admin@gmail.com",
+                        UserName = "admin@gmail.com",
                     };
 
                     var userAuthor = new UserEntity
                     {
                         FirstName = "Sucriptor",
-                        LastName = "Blog",
-                        Email = "Suscriptor@blogunah.edu",
-                        UserName = "Suscriptor@blogunah.edu",
+                        LastName = "Book",
+                        Email = "Suscriptor@gmail.com",
+                        UserName = "Suscriptor@gmail.com",
                     };
 
                     var normalUser = new UserEntity
                     {
                         FirstName = "Visit",
-                        LastName = "Blog",
-                        Email = "Visit@blogunah.edu",
-                        UserName = "Visit@blogunah.edu",
+                        LastName = "Book",
+                        Email = "Visit@gmail.com",
+                        UserName = "Visit@gmail.com",
                     };
 
                     await userManager.CreateAsync(userAdmin, "Temporal01*");
