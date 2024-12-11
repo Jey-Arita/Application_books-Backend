@@ -76,7 +76,7 @@ namespace Application_books
                     policy.RequireAssertion(context =>
                         context.User.IsInRole(RolesConstant.ADMIN) ||
                         (context.User.IsInRole(RolesConstant.SUSCRIPTOR) &&
-                         context.User.HasClaim(c => c.Type == "Membresia" && (c.Value == "Premium")))));
+                         context.User.HasClaim(c => c.Type == "Membresia" && ((c.Value == "Premium") || (c.Value == "Prueba"))))));
             });
 
 

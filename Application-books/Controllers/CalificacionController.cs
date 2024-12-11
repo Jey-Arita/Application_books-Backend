@@ -19,7 +19,7 @@ namespace Application_books.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = $"{RolesConstant.ADMIN}, {RolesConstant.SUSCRIPTOR}")]
+        [Authorize(Policy = "AdminOrSubscriberAndPremium")]
         public async Task<ActionResult<ResponseDto<List<CalificacionDto>>>> GetAll()
         {
             var response = await _calificacionesServices.GetCalificacionesListAsync();

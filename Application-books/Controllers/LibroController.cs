@@ -1,6 +1,7 @@
 using Application_books.Constants;
 using Application_books.Dtos.Common;
 using Application_books.Dtos.Libros;
+using Application_books.Dtos.Membresia;
 using Application_books.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,17 +14,21 @@ namespace Application_books.Controllers
     public class LibroController : ControllerBase
     {
         private readonly ILibrosServices _librosServices;
+        private readonly IMembresiaServicio _membresiaServicio;
 
-        public LibroController(ILibrosServices librosServices)
+        public LibroController(ILibrosServices librosServices, IMembresiaServicio membresiaServicio)
         {
             this._librosServices = librosServices;
+            this._membresiaServicio = membresiaServicio;
         }
 
         [HttpGet]
-        [Authorize(Roles = $"{RolesConstant.SUSCRIPTOR}")]
+        [Authorize(Roles = $"{RolesConstant.SUSCRIPTOR},{RolesConstant.ADMIN}")]
         public async Task<ActionResult<ResponseDto<PaginationDto<List<LibroDto>>>>> PaginationList(string searchTerm, int page = 1) 
         {
             var response = await _librosServices.GetLibroListAsync(searchTerm, page);
+
+           var responses = await _membresiaServicio.GetMembresiaByUserAsync();
 
             return StatusCode(response.StatusCode, new
             {
