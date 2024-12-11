@@ -21,13 +21,15 @@ namespace Application_books.Services
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
         private readonly ApplicationbooksContext _context;
+        private readonly IMembresiaServicio _membresiaServicio;
 
         public AuthService(
             SignInManager<UserEntity> signInManager,
             UserManager<UserEntity> userManager,
             IConfiguration configuration,
             ILogger<AuthService> logger,
-            ApplicationbooksContext context
+            ApplicationbooksContext context,
+            IMembresiaServicio membresiaServicio
             )
         {
             this._signInManager = signInManager;
@@ -35,6 +37,7 @@ namespace Application_books.Services
             this._configuration = configuration;
             this._logger = logger;
             this._context = context;
+            this._membresiaServicio = membresiaServicio;
         }
 
         private async Task<List<Claim>> GetClaims(UserEntity userEntity)

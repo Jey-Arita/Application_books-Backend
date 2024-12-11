@@ -54,6 +54,13 @@ namespace Application_books.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpGet("genero/{generoId}")]
+        [Authorize(Policy = "AdminOrSubscriberAndPremium")]
+        public async Task<ActionResult<ResponseDto<List<LibroDto>>>> GetLibrosByGenero(Guid generoId)
+        {
+            var response = await _librosServices.GetLibrosByGeneroAsync(generoId);
+            return StatusCode(response.StatusCode, response);
+        }
 
 
 

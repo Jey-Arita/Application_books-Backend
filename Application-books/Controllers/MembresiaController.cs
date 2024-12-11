@@ -16,12 +16,12 @@ namespace Application_books.Controllers
         {
             this._membresiaServicio = membresiaServicio;
         }
-        [HttpGet]
-        public async Task<ActionResult<ResponseDto<MembresiaDto>>> GetById()
-        {
-            var response = await _membresiaServicio.GetMembresiaByUserAsync();
-            return StatusCode(response.StatusCode, response);
-        }
+        //[HttpGet]
+        //public async Task<ActionResult<ResponseDto<MembresiaDto>>> GetById()
+        //{
+        //    var response = await _membresiaServicio.GetMembresiaByUserAsync();
+        //    return StatusCode(response.StatusCode, response);
+        //}
 
         [AllowAnonymous]
         [HttpPost]

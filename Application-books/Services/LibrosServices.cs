@@ -121,6 +121,38 @@ namespace Application_books.Services
                 Data= libroDto,
             };
         }
+
+        public async Task<ResponseDto<List<LibroDto>>> GetLibrosByGeneroAsync(Guid generoId)
+        {
+            // Filtramos los libros que están relacionados con el género proporcionado
+            var librosEntities = await _booksContext.Libros
+                .Where(x => x.IdGenero == generoId)  // Filtramos por el ID del género
+                .Include(x => x.Calificaciones)      // Incluimos las calificaciones (si es necesario)
+                .ToListAsync();
+
+            if (librosEntities == null || !librosEntities.Any())
+            {
+                return new ResponseDto<List<LibroDto>>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "No se encontraron libros para el género especificado."
+                };
+            }
+
+            // Mapeamos las entidades de libros a DTOs
+            var librosDto = _mapper.Map<List<LibroDto>>(librosEntities);
+
+            return new ResponseDto<List<LibroDto>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Libros obtenidos correctamente.",
+                Data = librosDto
+            };
+        }
+
+
         public async Task<ResponseDto<LibroDto>> CreateAsync(LibroCreateDto dto)
         {
             var libroEntity = _mapper.Map<LibroEntity>(dto);

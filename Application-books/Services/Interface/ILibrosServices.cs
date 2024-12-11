@@ -11,5 +11,6 @@ namespace Application_books.Services.Interface
         Task<ResponseDto<LibroDto>> EditAsync(LibroEditDto dto, Guid id);
         Task<ResponseDto<LibroDto>> DeleteAsync(Guid id);
         Task<ResponseDto<List<LibroDto>>> GetLibroListDestacadosAsync();
+        Task<ResponseDto<List<LibroDto>>> GetLibrosByGeneroAsync(Guid generoId);
     }
 }
