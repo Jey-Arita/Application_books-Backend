@@ -8,5 +8,6 @@ namespace Application_books.Services.Interface
     {
         Task<ResponseDto<MembresiaDto>> GetMembresiaByUserAsync();
         Task<ResponseDto<MembresiaDto>> CreateOrUpdateMembresiaAsync(MembresiaCreateDto dto);
+        Task<ResponseDto<MembresiaCountDto>> GetMembresiasCountAsync();
     }
 }

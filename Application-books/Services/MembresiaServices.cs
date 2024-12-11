@@ -194,5 +194,28 @@ namespace Application_books.Services
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value;
         }
+
+        public async Task<ResponseDto<MembresiaCountDto>> GetMembresiasCountAsync()
+        {
+            var countPremium = await _context.Membresias.CountAsync(m => m.TipoMembresia == "Premium");
+            var countPrueba = await _context.Membresias.CountAsync(m => m.TipoMembresia == "Prueba");
+            var countGratis = await _context.Membresias.CountAsync(m => m.TipoMembresia == "Gratis");
+
+            var result = new MembresiaCountDto
+            {
+                Premium = countPremium,
+                Prueba = countPrueba,
+                Gratis = countGratis
+            };
+
+            return new ResponseDto<MembresiaCountDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Conteo de membresías obtenido correctamente.",
+                Data = result
+            };
+        }
+
     }
 }
